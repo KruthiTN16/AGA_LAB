@@ -1,0 +1,50 @@
+import numpy as np 
+from tensorflow import keras 
+ 
+# Load the MNIST dataset 
+(x_train, _), (x_test, _) = keras.datasets.mnist.load_data() 
+ 
+# Normalize the data and reshape it 
+x_train = x_train.astype('float32') / 255. 
+x_train = x_train.reshape(x_train.shape[0], -1) 
+x_test = x_test.astype('float32') / 255. 
+x_test = x_test.reshape(x_test.shape[0], -1) 
+ 
+# Set the dimensionality of the encoding space 
+encoding_dim = 32 
+ 
+# Define the input layer 
+input_img = keras.Input(shape=(784,)) 
+ 
+# Define the encoded layer 
+encoded = keras.layers.Dense(encoding_dim, 
+activation='relu')(input_img)
+# Define the decoded layer 
+decoded = keras.layers.Dense(784, activation='sigmoid')(encoded) 
+ 
+# Define the autoencoder model 
+autoencoder = keras.Model(input_img, decoded) 
+ 
+# Define the encoder model 
+encoder = keras.Model(input_img, encoded) 
+ 
+# Define the decoder model 
+decoder_input = keras.Input(shape=(encoding_dim,)) 
+decoder_layer = autoencoder.layers[-1] 
+decoder = keras.Model(decoder_input, 
+decoder_layer(decoder_input)) 
+ 
+# Compile the autoencoder model 
+autoencoder.compile(optimizer='adam', 
+loss='binary_crossentropy') 
+ 
+# Train the autoencoder model 
+autoencoder.fit(x_train, x_train, 
+                epochs=50, 
+                batch_size=256, 
+                shuffle=True, 
+                validation_data=(x_test, x_test)) 
+ 
+# Encode and decode some digits from the test set 
+encoded_imgs = encoder.predict(x_test) 
+decoded_imgs = decoder.predict(encoded_imgs) 
